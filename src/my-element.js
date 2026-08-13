@@ -14,11 +14,51 @@ export class MyElement extends LitElement {
     currentPage: { type: String },
     orders: { type: Array },
     selectedOrder: { type: Object },
+    wishlist: { type: Array },
+    reviews: { type: Array },
   }
 
   constructor() {
     super()
-
+    this.reviews = [
+  {
+    id: 1,
+    product: 'Premium Dog Food',
+    rating: 5,
+    comment: 'Great quality and my dog really liked it.',
+    date: 'August 9, 2026',
+  },
+  {
+    id: 2,
+    product: 'Cat Scratching Toy',
+    rating: 4,
+    comment: 'Good product and very useful.',
+    date: 'August 10, 2026',
+  },
+]
+this.wishlist = [
+  {
+    id: 1,
+    name: 'Premium Dog Food',
+    category: 'Dogs',
+    price: 19.99,
+    emoji: '🐶',
+  },
+  {
+    id: 2,
+    name: 'Cat Scratching Toy',
+    category: 'Cats',
+    price: 20.00,
+    emoji: '🐱',
+  },
+  {
+    id: 3,
+    name: 'Pet Shampoo',
+    category: 'Accessories',
+    price: 14.50,
+    emoji: '🧴',
+  },
+]
     this.email = ''
     this.password = ''
     this.confirmPassword = ''
@@ -77,6 +117,9 @@ this.orders = [
   if (this.currentPage === 'profile') {
     return this._renderProfile()
   }
+  if (this.currentPage === 'edit-profile') {
+  return this._renderEditProfile()
+}
 
   if (this.currentPage === 'orders') {
     return this._renderOrders()
@@ -85,7 +128,12 @@ this.orders = [
   if (this.currentPage === 'order-details') {
     return this._renderOrderDetails()
   }
-
+if (this.currentPage === 'wishlist') {
+  return this._renderWishlist()
+}
+if (this.currentPage === 'reviews') {
+  return this._renderReviews()
+}
   return this._renderLogin()
 }
 
@@ -371,6 +419,141 @@ _renderOrderDetails() {
     </div>
   `
 }
+_renderWishlist() {
+  return html`
+    <div class="page">
+      ${this._renderNavbar()}
+
+      <main class="wishlist-content">
+        <div class="wishlist-container">
+
+          <button
+            class="back-button"
+            @click=${this._backToProfile}
+          >
+            ← Back to Profile
+          </button>
+
+          <div class="wishlist-heading">
+            <h1>My Wishlist</h1>
+            <p>
+              Products you saved for later.
+            </p>
+          </div>
+
+          ${this.wishlist.length === 0
+            ? html`
+                <div class="empty-state">
+                  <div>❤️</div>
+
+                  <h2>Your wishlist is empty</h2>
+
+                  <p>
+                    Products you save will appear here.
+                  </p>
+                </div>
+              `
+            : html`
+                <div class="wishlist-grid">
+
+                  ${this.wishlist.map(
+                    (product) => html`
+                      <div class="wishlist-card">
+
+                        <div class="product-icon">
+                          ${product.emoji}
+                        </div>
+
+                        <div class="product-category">
+                          ${product.category}
+                        </div>
+
+                        <h2>${product.name}</h2>
+
+                        <div class="product-price">
+                          $${product.price.toFixed(2)}
+                        </div>
+
+                        <div class="wishlist-actions">
+                          <md-filled-button>
+                            View Product
+                          </md-filled-button>
+                          <button
+                            class="remove-button"
+                            @click=${() =>
+                              this._removeFromWishlist(product.id)}
+                          >
+                            Remove
+                          </button>
+                        </div>
+
+                      </div>
+                    `
+                  )}
+
+                </div>
+              `}
+
+        </div>
+      </main>
+    </div>
+  `
+}
+_renderEditProfile() {
+  return html`
+    <div class="page">
+      ${this._renderNavbar()}
+
+      <main class="content">
+        <div class="login-card">
+
+          <div class="icon">👤</div>
+
+          <h1>Edit Profile</h1>
+
+          <p class="subtitle">
+            Update your personal information.
+          </p>
+
+          <form @submit=${this._saveProfile}>
+
+            <md-outlined-text-field
+              label="Full Name"
+              required
+              .value=${this.name}
+              @input=${this._updateName}
+            ></md-outlined-text-field>
+
+            <md-outlined-text-field
+              label="Email"
+              type="email"
+              required
+              .value=${this.email}
+              @input=${this._updateEmail}
+            ></md-outlined-text-field>
+
+            <md-filled-button type="submit">
+              Save Changes
+            </md-filled-button>
+
+            <md-outlined-button
+              type="button"
+              @click=${this._backToProfile}
+            >
+              Cancel
+            </md-outlined-button>
+
+          </form>
+
+          ${this.message
+            ? html`<p class="message">${this.message}</p>`
+            : ''}
+
+        </div>
+      </main>
+    </div>
+  `
+}
    _renderProfile() {
   const account =
     JSON.parse(localStorage.getItem('petStoreAccount')) || {
@@ -411,16 +594,17 @@ _renderOrderDetails() {
             </div>
 
             <div class="profile-actions">
-              <md-filled-button>
-                Edit Profile
-              </md-filled-button>
+               <md-filled-button @click=${this._showEditProfile}>
+                 Edit Profile
+               </md-filled-button>
 
               <md-outlined-button @click=${this._logout}>
                 Logout
               </md-outlined-button>
             </div>
           </div>
-
+              <div class="account-links">
+              
             <button
             class="account-link"
             @click=${this._showOrders}
@@ -433,16 +617,22 @@ _renderOrderDetails() {
             </div>
           </button>
 
-            <button class="account-link">
-              <span>❤️</span>
+           <button
+  class="account-link"
+  @click=${this._showWishlist}
+>
+  <span>❤️</span>
 
-              <div>
-                <strong>Wishlist</strong>
-                <p>View your saved products</p>
-              </div>
-            </button>
+  <div>
+    <strong>Wishlist</strong>
+    <p>View your saved products</p>
+  </div>
+</button>
 
-            <button class="account-link">
+              <button
+                class="account-link"
+                @click=${this._showReviews}
+              >
               <span>⭐</span>
 
               <div>
@@ -451,6 +641,76 @@ _renderOrderDetails() {
               </div>
             </button>
           </div>
+        </div>
+      </main>
+    </div>
+  `
+}
+_renderReviews() {
+  return html`
+    <div class="page">
+      ${this._renderNavbar()}
+
+      <main class="reviews-content">
+        <div class="reviews-container">
+
+          <button
+            class="back-button"
+            @click=${this._backToProfile}
+          >
+            ← Back to Profile
+          </button>
+
+          <div class="reviews-heading">
+            <h1>My Reviews</h1>
+            <p>View and manage your product reviews.</p>
+          </div>
+
+          ${this.reviews.length === 0
+            ? html`
+                <div class="empty-state">
+                  <div>⭐</div>
+                  <h2>No reviews yet</h2>
+                  <p>Your product reviews will appear here.</p>
+                </div>
+              `
+            : html`
+                <div class="reviews-list">
+                  ${this.reviews.map(
+                    (review) => html`
+                      <div class="review-card">
+
+                        <div class="review-header">
+                          <div>
+                            <h2>${review.product}</h2>
+                            <span>${review.date}</span>
+                          </div>
+
+                          <div class="stars">
+                            ${'★'.repeat(review.rating)}
+                            ${'☆'.repeat(5 - review.rating)}
+                          </div>
+                        </div>
+
+                        <p class="review-comment">
+                          ${review.comment}
+                        </p>
+
+                        <div class="review-actions">
+                          <button
+                            class="delete-review"
+                            @click=${() =>
+                              this._deleteReview(review.id)}
+                          >
+                            Delete Review
+                          </button>
+                        </div>
+
+                      </div>
+                    `
+                  )}
+                </div>
+              `}
         </div>
       </main>
     </div>
@@ -629,6 +889,89 @@ _backToOrders() {
   this.currentPage = 'orders'
 }
 
+_showWishlist() {
+  this.currentPage = 'wishlist'
+}
+
+_removeFromWishlist(productId) {
+  this.wishlist = this.wishlist.filter(
+    (product) => product.id !== productId
+  )
+}
+_showReviews() {
+  this.currentPage = 'reviews'
+}
+
+_deleteReview(reviewId) {
+  this.reviews = this.reviews.filter(
+    (review) => review.id !== reviewId
+  )
+}
+_showEditProfile() {
+  const account = JSON.parse(
+    localStorage.getItem('petStoreAccount')
+  )
+
+  if (!account) {
+    return
+  }
+
+  this.name = account.name
+  this.email = account.email
+  this.message = ''
+  this.currentPage = 'edit-profile'
+}
+_saveProfile(event) {
+  event.preventDefault()
+
+  if (!this.name.trim() || !this.email.trim()) {
+    this.message = 'Please fill in all fields.'
+    return
+  }
+
+  if (!this._isValidEmail(this.email)) {
+    this.message = 'Please enter a valid email address.'
+    return
+  }
+
+  const oldAccount = JSON.parse(
+    localStorage.getItem('petStoreAccount')
+  )
+
+  if (!oldAccount) {
+    this.message = 'Account not found.'
+    return
+  }
+
+  const updatedAccount = {
+    ...oldAccount,
+    name: this.name.trim(),
+    email: this.email.trim().toLowerCase(),
+  }
+
+  localStorage.setItem(
+    'petStoreAccount',
+    JSON.stringify(updatedAccount)
+  )
+
+  const loggedInUser = JSON.parse(
+    localStorage.getItem('petStoreUser')
+  )
+
+  if (loggedInUser) {
+    localStorage.setItem(
+      'petStoreUser',
+      JSON.stringify({
+        ...loggedInUser,
+        name: updatedAccount.name,
+        email: updatedAccount.email,
+      })
+    )
+  }
+
+  this.message = ''
+  this.currentPage = 'profile'
+}
 _logout() {
   localStorage.removeItem('petStoreUser')
 
@@ -1113,14 +1456,234 @@ _logout() {
 
   font-size: 20px;
 }
+  .wishlist-content {
+  min-height: calc(100vh - 72px);
+  padding: 50px 20px;
+}
+
+.wishlist-container {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.wishlist-heading {
+  margin: 25px 0 30px;
+}
+
+.wishlist-heading h1 {
+  text-align: left;
+  margin-bottom: 8px;
+}
+
+.wishlist-heading p {
+  color: #77717d;
+  margin: 0;
+}
+
+.wishlist-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.wishlist-card {
+  background: white;
+  border: 1px solid #e5e1e9;
+  border-radius: 18px;
+
+  padding: 25px;
+
+  box-shadow: 0 8px 30px rgba(40, 32, 55, 0.06);
+}
+
+.product-icon {
+  width: 65px;
+  height: 65px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #f1ecf9;
+  border-radius: 16px;
+
+  font-size: 32px;
+
+  margin-bottom: 18px;
+}
+
+.product-category {
+  color: #817b86;
+  font-size: 13px;
+  margin-bottom: 7px;
+}
+
+.wishlist-card h2 {
+  font-size: 18px;
+  margin: 0 0 12px;
+  color: #302b35;
+}
+
+.product-price {
+  color: #6750a4;
+  font-size: 20px;
+  font-weight: 700;
+
+  margin-bottom: 22px;
+}
+
+.wishlist-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.remove-button {
+  height: 42px;
+
+  background: white;
+  border: 1px solid #d8d2dc;
+  border-radius: 22px;
+
+  color: #a32525;
+
+  font-family: inherit;
+  font-size: 14px;
+
+  cursor: pointer;
+}
+
+.remove-button:hover {
+  background: #fdeeee;
+}
+
+.empty-state {
+  background: white;
+  border: 1px solid #e5e1e9;
+  border-radius: 18px;
+
+  padding: 60px 20px;
+
+  text-align: center;
+}
+
+.empty-state > div {
+  font-size: 45px;
+}
+
+.empty-state h2 {
+  margin: 15px 0 8px;
+}
+
+.empty-state p {
+  color: #77717d;
+  margin: 0;
+}
+  .reviews-content {
+  min-height: calc(100vh - 72px);
+  padding: 50px 20px;
+}
+
+.reviews-container {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.reviews-heading {
+  margin: 25px 0 30px;
+}
+
+.reviews-heading h1 {
+  text-align: left;
+  margin-bottom: 8px;
+}
+
+.reviews-heading p {
+  color: #77717d;
+  margin: 0;
+}
+
+.reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.review-card {
+  background: white;
+  border: 1px solid #e5e1e9;
+  border-radius: 18px;
+  padding: 28px;
+
+  box-shadow: 0 8px 30px rgba(40, 32, 55, 0.06);
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.review-header h2 {
+  margin: 0 0 7px;
+  font-size: 19px;
+}
+
+.review-header span {
+  color: #817b86;
+  font-size: 13px;
+}
+
+.stars {
+  color: #e3ac20;
+  font-size: 21px;
+  letter-spacing: 2px;
+}
+
+.review-comment {
+  margin: 22px 0;
+  color: #625d68;
+  line-height: 1.6;
+}
+
+.review-actions {
+  border-top: 1px solid #eeeaf1;
+  padding-top: 18px;
+}
+
+.delete-review {
+  background: transparent;
+  border: 1px solid #d8d2dc;
+  border-radius: 20px;
+
+  padding: 9px 16px;
+
+  color: #a32525;
+
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.delete-review:hover {
+  background: #fdeeee;
+}
 
     @media (max-width: 650px) {.profile-header {
   align-items: flex-start;
+}
+  .wishlist-grid {
+  grid-template-columns: 1fr;
 }
   .order-info {
   grid-template-columns: 1fr;
 }
 
+.review-header {
+  flex-direction: column;
+}
 .order-top {
   flex-direction: column;
 }
@@ -1129,6 +1692,7 @@ _logout() {
 .details-card {
   padding: 22px;
 }
+
 
 .profile-avatar {
   width: 60px;
