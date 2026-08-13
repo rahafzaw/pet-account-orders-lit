@@ -2,6 +2,7 @@ import { LitElement, css, html } from 'lit'
 
 import '@material/web/button/filled-button.js'
 import '@material/web/textfield/outlined-text-field.js'
+import '@material/web/button/outlined-button.js'
 
 export class MyElement extends LitElement {
   static properties = {
@@ -11,6 +12,8 @@ export class MyElement extends LitElement {
     name: { type: String },
     message: { type: String },
     currentPage: { type: String },
+    orders: { type: Array },
+    selectedOrder: { type: Object },
   }
 
   constructor() {
@@ -22,15 +25,69 @@ export class MyElement extends LitElement {
     this.name = ''
     this.message = ''
     this.currentPage = 'login'
+    this.selectedOrder = null
+
+this.orders = [
+  {
+    id: '1001',
+    date: 'August 8, 2026',
+    status: 'Delivered',
+    total: 48.99,
+    address: 'Nablus, Palestine',
+    items: [
+      {
+        name: 'Premium Dog Food',
+        quantity: 2,
+        price: 19.99,
+      },
+      {
+        name: 'Dog Toy',
+        quantity: 1,
+        price: 9.01,
+      },
+    ],
+  },
+  {
+    id: '1002',
+    date: 'August 11, 2026',
+    status: 'Processing',
+    total: 34.5,
+    address: 'Nablus, Palestine',
+    items: [
+      {
+        name: 'Pet Shampoo',
+        quantity: 1,
+        price: 14.5,
+      },
+      {
+        name: 'Cat Scratching Toy',
+        quantity: 1,
+        price: 20,
+      },
+    ],
+  },
+]
   }
 
   render() {
-    if (this.currentPage === 'register') {
-      return this._renderRegister()
-    }
-
-    return this._renderLogin()
+  if (this.currentPage === 'register') {
+    return this._renderRegister()
   }
+
+  if (this.currentPage === 'profile') {
+    return this._renderProfile()
+  }
+
+  if (this.currentPage === 'orders') {
+    return this._renderOrders()
+  }
+
+  if (this.currentPage === 'order-details') {
+    return this._renderOrderDetails()
+  }
+
+  return this._renderLogin()
+}
 
   _renderLogin() {
     return html`
@@ -156,7 +213,249 @@ export class MyElement extends LitElement {
       </div>
     `
   }
+  _renderOrders() {
+  return html`
+    <div class="page">
+      ${this._renderNavbar()}
 
+      <main class="orders-content">
+        <div class="orders-container">
+
+          <button
+            class="back-button"
+            @click=${this._backToProfile}
+          >
+            ← Back to Profile
+          </button>
+
+          <div class="orders-heading">
+            <h1>My Orders</h1>
+            <p>View your previous orders and their current status.</p>
+          </div>
+
+          <div class="orders-list">
+            ${this.orders.map(
+              (order) => html`
+                <div class="order-card">
+
+                  <div class="order-top">
+                    <div>
+                      <span class="order-label">Order</span>
+                      <h2>#${order.id}</h2>
+                    </div>
+
+                    <span
+                      class="status ${order.status.toLowerCase()}"
+                    >
+                      ${order.status}
+                    </span>
+                  </div>
+
+                  <div class="order-info">
+                    <div>
+                      <span>Date</span>
+                      <strong>${order.date}</strong>
+                    </div>
+
+                    <div>
+                      <span>Items</span>
+                      <strong>${order.items.length}</strong>
+                    </div>
+
+                    <div>
+                      <span>Total</span>
+                      <strong>$${order.total.toFixed(2)}</strong>
+                    </div>
+                  </div>
+
+                  <md-filled-button
+                    @click=${() => this._showOrderDetails(order)}
+                  >
+                    View Details
+                  </md-filled-button>
+
+                </div>
+              `
+            )}
+          </div>
+
+        </div>
+      </main>
+    </div>
+  `
+}
+_renderOrderDetails() {
+  const order = this.selectedOrder
+
+  if (!order) {
+    return html`
+      <div class="page">
+        ${this._renderNavbar()}
+
+        <main class="orders-content">
+          <div class="orders-container">
+            <p>No order selected.</p>
+
+            <md-filled-button @click=${this._showOrders}>
+              Back to Orders
+            </md-filled-button>
+          </div>
+        </main>
+      </div>
+    `
+  }
+
+  return html`
+    <div class="page">
+      ${this._renderNavbar()}
+
+      <main class="orders-content">
+        <div class="orders-container">
+
+          <button
+            class="back-button"
+            @click=${this._backToOrders}
+          >
+            ← Back to Orders
+          </button>
+
+          <div class="details-card">
+
+            <div class="order-top">
+              <div>
+                <span class="order-label">Order Details</span>
+                <h1>#${order.id}</h1>
+                <p>${order.date}</p>
+              </div>
+
+              <span
+                class="status ${order.status.toLowerCase()}"
+              >
+                ${order.status}
+              </span>
+            </div>
+
+            <div class="items-section">
+              <h2>Items</h2>
+
+              ${order.items.map(
+                (item) => html`
+                  <div class="order-item">
+                    <div>
+                      <strong>${item.name}</strong>
+                      <p>Quantity: ${item.quantity}</p>
+                    </div>
+
+                    <strong>
+                      $${(item.price * item.quantity).toFixed(2)}
+                    </strong>
+                  </div>
+                `
+              )}
+            </div>
+
+            <div class="shipping-section">
+              <h2>Shipping Address</h2>
+              <p>${order.address}</p>
+            </div>
+
+            <div class="order-total">
+              <span>Total</span>
+              <strong>$${order.total.toFixed(2)}</strong>
+            </div>
+
+          </div>
+
+        </div>
+      </main>
+    </div>
+  `
+}
+   _renderProfile() {
+  const account =
+    JSON.parse(localStorage.getItem('petStoreAccount')) || {
+      name: 'User',
+      email: '',
+    }
+
+  return html`
+    <div class="page">
+      ${this._renderNavbar()}
+
+      <main class="profile-content">
+        <div class="profile-container">
+          <div class="profile-header">
+            <div class="profile-avatar">
+              ${account.name.charAt(0).toUpperCase()}
+            </div>
+
+            <div>
+              <h1>My Profile</h1>
+              <p class="profile-subtitle">
+                Manage your personal information and account.
+              </p>
+            </div>
+          </div>
+
+          <div class="profile-card">
+            <h2>Personal Information</h2>
+
+            <div class="info-group">
+              <span class="info-label">Full Name</span>
+              <span class="info-value">${account.name}</span>
+            </div>
+
+            <div class="info-group">
+              <span class="info-label">Email Address</span>
+              <span class="info-value">${account.email}</span>
+            </div>
+
+            <div class="profile-actions">
+              <md-filled-button>
+                Edit Profile
+              </md-filled-button>
+
+              <md-outlined-button @click=${this._logout}>
+                Logout
+              </md-outlined-button>
+            </div>
+          </div>
+
+            <button
+            class="account-link"
+            @click=${this._showOrders}
+            >
+            <span>📦</span>
+
+            <div>
+              <strong>My Orders</strong>
+              <p>View your order history and status</p>
+            </div>
+          </button>
+
+            <button class="account-link">
+              <span>❤️</span>
+
+              <div>
+                <strong>Wishlist</strong>
+                <p>View your saved products</p>
+              </div>
+            </button>
+
+            <button class="account-link">
+              <span>⭐</span>
+
+              <div>
+                <strong>My Reviews</strong>
+                <p>Manage your product reviews</p>
+              </div>
+            </button>
+          </div>
+        </div>
+      </main>
+    </div>
+  `
+}
   _renderNavbar() {
     return html`
       <header class="navbar">
@@ -283,7 +582,9 @@ export class MyElement extends LitElement {
       })
     )
 
-    this.message = `Welcome back, ${savedAccount.name}!`
+    this.message = ''
+    this.currentPage = 'profile'
+    this.password = ''
   }
 
   _showRegister(event) {
@@ -311,6 +612,31 @@ export class MyElement extends LitElement {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
   }
 
+  _showOrders() {
+  this.currentPage = 'orders'
+}
+
+_showOrderDetails(order) {
+  this.selectedOrder = order
+  this.currentPage = 'order-details'
+}
+
+_backToProfile() {
+  this.currentPage = 'profile'
+}
+
+_backToOrders() {
+  this.currentPage = 'orders'
+}
+
+_logout() {
+  localStorage.removeItem('petStoreUser')
+
+  this.currentPage = 'login'
+  this.email = ''
+  this.password = ''
+  this.message = ''
+}
   static styles = css`
     :host {
       display: block;
@@ -487,8 +813,336 @@ export class MyElement extends LitElement {
       font-size: 14px;
       line-height: 1.4;
     }
+   .profile-content {
+  min-height: calc(100vh - 72px);
+  padding: 50px 20px;
+}
 
-    @media (max-width: 650px) {
+.profile-container {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #6750a4;
+  color: white;
+
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.profile-header h1 {
+  text-align: left;
+}
+
+.profile-subtitle {
+  margin: 6px 0 0;
+  color: #77717d;
+}
+
+.profile-card {
+  background: white;
+  border: 1px solid #e5e1e9;
+  border-radius: 18px;
+  padding: 30px;
+  box-shadow: 0 8px 30px rgba(40, 32, 55, 0.06);
+}
+
+.profile-card h2 {
+  margin: 0 0 25px;
+  font-size: 21px;
+}
+
+.info-group {
+  padding: 18px 0;
+  border-bottom: 1px solid #eeeaf1;
+
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.info-label {
+  font-size: 13px;
+  color: #817b86;
+}
+
+.info-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: #332f37;
+}
+
+.profile-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 25px;
+}
+
+.account-links {
+  margin-top: 25px;
+
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.account-link {
+  background: white;
+  border: 1px solid #e5e1e9;
+  border-radius: 16px;
+
+  padding: 22px;
+
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+
+  text-align: left;
+  cursor: pointer;
+
+  font-family: inherit;
+}
+
+.account-link:hover {
+  border-color: #6750a4;
+  box-shadow: 0 5px 20px rgba(40, 32, 55, 0.07);
+}
+
+.account-link > span {
+  font-size: 27px;
+}
+
+.account-link strong {
+  color: #302b35;
+  font-size: 16px;
+}
+
+.account-link p {
+  margin: 6px 0 0;
+  color: #817b86;
+  font-size: 13px;
+  line-height: 1.4;
+}
+  .orders-content {
+  min-height: calc(100vh - 72px);
+  padding: 50px 20px;
+}
+
+.orders-container {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.orders-heading {
+  margin: 25px 0 30px;
+}
+
+.orders-heading h1 {
+  text-align: left;
+  margin-bottom: 8px;
+}
+
+.orders-heading p {
+  color: #77717d;
+  margin: 0;
+}
+
+.back-button {
+  background: transparent;
+  border: none;
+  color: #6750a4;
+
+  padding: 0;
+
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.order-card,
+.details-card {
+  background: white;
+  border: 1px solid #e5e1e9;
+  border-radius: 18px;
+
+  padding: 28px;
+
+  box-shadow: 0 8px 30px rgba(40, 32, 55, 0.06);
+}
+
+.order-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.order-top h1,
+.order-top h2 {
+  margin: 4px 0;
+  text-align: left;
+}
+
+.order-top p {
+  margin: 5px 0;
+  color: #77717d;
+}
+
+.order-label {
+  color: #817b86;
+  font-size: 13px;
+}
+
+.status {
+  padding: 7px 13px;
+  border-radius: 20px;
+
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.status.delivered {
+  color: #176b3a;
+  background: #e6f5eb;
+}
+
+.status.processing {
+  color: #865b00;
+  background: #fff3d6;
+}
+
+.status.cancelled {
+  color: #a32525;
+  background: #fde7e7;
+}
+
+.order-info {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+
+  gap: 20px;
+
+  margin: 25px 0;
+  padding: 20px 0;
+
+  border-top: 1px solid #eeeaf1;
+  border-bottom: 1px solid #eeeaf1;
+}
+
+.order-info div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.order-info span {
+  color: #817b86;
+  font-size: 13px;
+}
+
+.order-info strong {
+  color: #302b35;
+}
+
+.items-section {
+  margin-top: 30px;
+}
+
+.items-section h2,
+.shipping-section h2 {
+  font-size: 19px;
+}
+
+.order-item {
+  display: flex;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  padding: 18px 0;
+  border-bottom: 1px solid #eeeaf1;
+}
+
+.order-item p {
+  color: #77717d;
+  margin: 6px 0 0;
+}
+
+.shipping-section {
+  margin-top: 30px;
+}
+
+.shipping-section p {
+  color: #625d68;
+}
+
+.order-total {
+  margin-top: 30px;
+
+  display: flex;
+  justify-content: space-between;
+
+  padding-top: 20px;
+  border-top: 2px solid #eeeaf1;
+
+  font-size: 20px;
+}
+
+    @media (max-width: 650px) {.profile-header {
+  align-items: flex-start;
+}
+  .order-info {
+  grid-template-columns: 1fr;
+}
+
+.order-top {
+  flex-direction: column;
+}
+
+.order-card,
+.details-card {
+  padding: 22px;
+}
+
+.profile-avatar {
+  width: 60px;
+  height: 60px;
+  font-size: 25px;
+}
+
+.account-links {
+  grid-template-columns: 1fr;
+}
+
+.profile-actions {
+  flex-direction: column;
+}
       .navbar {
         padding: 14px 20px;
       }
