@@ -4,6 +4,7 @@ export function wishlistPage({
   wishlist,
   onBack,
   onRemove,
+  onViewProduct,
 }) {
   return html`
     <div class="page">
@@ -63,7 +64,9 @@ export function wishlistPage({
 
                         <div class="wishlist-actions">
 
-                          <md-filled-button>
+                          <md-filled-button
+                            @click=${() => onViewProduct(product)}
+                          >
                             View Product
                           </md-filled-button>
 

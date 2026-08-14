@@ -43,10 +43,11 @@ export function registerPage({
               @input=${onEmailInput}
             ></md-outlined-text-field>
 
-            <md-outlined-text-field
+                      <md-outlined-text-field
               label="Password"
               type="password"
               required
+              minlength="8"
               .value=${password}
               @input=${onPasswordInput}
             ></md-outlined-text-field>
@@ -55,6 +56,7 @@ export function registerPage({
               label="Confirm Password"
               type="password"
               required
+              minlength="8"
               .value=${confirmPassword}
               @input=${onConfirmPasswordInput}
             ></md-outlined-text-field>

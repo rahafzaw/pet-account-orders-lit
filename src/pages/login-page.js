@@ -40,10 +40,7 @@ export function loginPage({
               @input=${onPasswordInput}
             ></md-outlined-text-field>
 
-            <div class="forgot">
-              <a href="#">Forgot password?</a>
-            </div>
-
+            
             <md-filled-button type="submit">
               Sign In
             </md-filled-button>

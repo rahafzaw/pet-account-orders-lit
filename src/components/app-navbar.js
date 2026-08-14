@@ -10,17 +10,35 @@ export class AppNavbar extends LitElement {
         </div>
 
         <nav>
-          <a href="#" @click=${this._handleHelp}>
+          <button @click=${this._openHelp}>
             Help
-          </a>
+          </button>
 
-          <button @click=${this._handleBackToShop}>
+          <button @click=${this._backToShop}>
             Back to Shop
           </button>
         </nav>
       </header>
     `
   }
+_backToShop() {
+  this.dispatchEvent(
+    new CustomEvent('back-to-shop', {
+      bubbles: true,
+      composed: true,
+    })
+  )
+}
+
+_openHelp() {
+    this.dispatchEvent(
+      new CustomEvent('open-help', {
+        bubbles: true,
+        composed: true,
+      })
+    )
+  }
+
 
   _handleHelp(event) {
     event.preventDefault()

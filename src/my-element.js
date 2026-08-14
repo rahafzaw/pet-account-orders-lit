@@ -52,7 +52,13 @@ constructor() {
   this.confirmPassword = ''
   this.name = ''
   this.message = ''
-  this.currentPage = 'login'
+ const loggedInUser = getLoggedInUser()
+
+this.currentPage =
+  loggedInUser?.loggedIn === true
+    ? 'profile'
+    : 'login'
+
   this.selectedOrder = null
 
   this.orders = structuredClone(initialOrders)
@@ -145,6 +151,9 @@ _renderWishlist() {
 
     onRemove: (productId) =>
       this._removeFromWishlist(productId),
+
+    onViewProduct: (product) =>
+      this._viewProduct(product),
   })
 }
 _renderEditProfile() {
@@ -225,10 +234,14 @@ _renderReviews() {
       return
     }
 
-    if (this.password.length < 6) {
-      this.message = 'Password must be at least 6 characters.'
+    if (this.password.length < 8) {
+      this.message = 'Password must be at least 8 characters.'
       return
     }
+    if (this.name.trim().length < 2) {
+  this.message = 'Please enter a valid full name.'
+  return
+}
 
     if (this.password !== this.confirmPassword) {
       this.message = 'Passwords do not match.'
@@ -249,7 +262,15 @@ saveAccount(account)
     this.confirmPassword = ''
     this.message = 'Account created successfully. Please sign in.'
   }
-
+_viewProduct(product) {
+  this.dispatchEvent(
+    new CustomEvent('view-product', {
+      detail: { product },
+      bubbles: true,
+      composed: true,
+    })
+  )
+}
   _handleLogin(event) {
     event.preventDefault()
 
